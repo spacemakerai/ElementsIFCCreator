@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.11.35017.193
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ElementsIFCCreator", "ElementsIFCCreator\ElementsIFCCreator.csproj", "{A96089A1-0C49-4A85-900E-0806810C08E2}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ElementsIFCCreator.Tests", "ElementsIFCCreator.Tests\ElementsIFCCreator.Tests.csproj", "{062C9318-1450-4D77-8FF7-77614381F279}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{A96089A1-0C49-4A85-900E-0806810C08E2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A96089A1-0C49-4A85-900E-0806810C08E2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A96089A1-0C49-4A85-900E-0806810C08E2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A96089A1-0C49-4A85-900E-0806810C08E2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{062C9318-1450-4D77-8FF7-77614381F279}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{062C9318-1450-4D77-8FF7-77614381F279}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{062C9318-1450-4D77-8FF7-77614381F279}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{062C9318-1450-4D77-8FF7-77614381F279}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {BCD89255-A081-4223-B5AF-1E782985324E}
+	EndGlobalSection
+EndGlobal
