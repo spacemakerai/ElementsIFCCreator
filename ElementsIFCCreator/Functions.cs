@@ -1,8 +1,6 @@
-using System.Net;
-using Amazon.Lambda.Core;
 using Amazon.Lambda.APIGatewayEvents;
-using Amazon.Lambda.Annotations;
-using Amazon.Lambda.Annotations.APIGateway;
+using Amazon.Lambda.Core;
+using System.Net;
 
 // Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.
 [assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.SystemTextJson.DefaultLambdaJsonSerializer))]
@@ -20,26 +18,23 @@ public class Functions
 
 
     /// <summary>
-    /// A Lambda function to respond to HTTP Get methods from API Gateway
+    /// This function will be triggered by an http request.
+    /// It will get the urn for the proposal element tree, convert it to IFC file format, upload the file to S3 and return the S3 url.
     /// </summary>
-    /// <remarks>
-    /// This uses the <see href="https://github.com/aws/aws-lambda-dotnet/blob/master/Libraries/src/Amazon.Lambda.Annotations/README.md">Lambda Annotations</see> 
-    /// programming model to bridge the gap between the Lambda programming model and a more idiomatic .NET model.
-    /// 
-    /// This automatically handles reading parameters from an APIGatewayProxyRequest
-    /// as well as syncing the function definitions to serverless.template each time you build.
-    /// 
-    /// If you do not wish to use this model and need to manipulate the API Gateway 
-    /// objects directly, see the accompanying Readme.md for instructions.
-    /// </remarks>
     /// <param name="context">Information about the invocation, function, and execution environment</param>
-    /// <returns>The response as an implicit <see cref="APIGatewayProxyResponse"/></returns>
-    [LambdaFunction]
-    [RestApi(LambdaHttpMethod.Get, "/")]
-    public IHttpResult Get(ILambdaContext context)
+    /// <param name="request">The incoming request</param>
+    /// <returns>The response indicating success of failure with the appropriate HTTP status code<see cref="APIGatewayProxyResponse"/>APIGatewayProxyResponse with the status code and if successful, the url of the S3 location for the IFC file</returns>
+    public APIGatewayProxyResponse Get(APIGatewayProxyRequest request, ILambdaContext context)
     {
         context.Logger.LogInformation("Handling the 'Get' Request");
 
-        return HttpResults.Ok("Hello AWS Serverless");
+        var response = new APIGatewayProxyResponse
+        {
+            StatusCode = (int)HttpStatusCode.OK,
+            Body = "Hello AWS Serverless",
+            Headers = new Dictionary<string, string> { { "Content-Type", "text/plain" } }
+        };
+
+        return response;
     }
 }

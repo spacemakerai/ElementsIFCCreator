@@ -1,6 +1,6 @@
 ﻿using GeometryGym.Ifc;
 
-namespace ElementsIFCCreator
+namespace ElementsIFCCreator.IfcGeometryCreators
 {
     public static class Model
     {
