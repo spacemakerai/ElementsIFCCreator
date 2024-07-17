@@ -5,10 +5,22 @@
     "dotnet lambda help",
     "All the command line options for the Lambda command can be specified in this file."
   ],
-  "profile": "eu",
-  "region": "eu-west-1",
+  "profile": "personal",
+  "region": "us-east-2",
   "configuration": "Release",
-  "s3-prefix": "ElementsIFCCreator/",
-  "template": "serverless.template",
-  "template-parameters": ""
+  "function-architecture": "x86_64",
+  "function-runtime": "dotnet6",
+  "function-memory-size": 512,
+  "function-timeout": 30,
+  "function-handler": "ElementsIFCCreator::ElementsIFCCreator.Functions::GetIFCS3Url",
+  "framework": "net6.0",
+  "function-name": "ElementsIFCCreator",
+  "package-type": "Zip",
+  "function-role": "arn:aws:iam::353531379884:role/Lambda-Admin",
+  "function-subnets": "",
+  "function-security-groups": "",
+  "tracing-mode": "PassThrough",
+  "environment-variables": "",
+  "image-tag": "",
+  "function-description": ""
 }

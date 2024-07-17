@@ -30,12 +30,6 @@ If already installed check if new version is available.
     dotnet tool update -g Amazon.Lambda.Tools
 ```
 
-Execute unit tests
-```
-    cd "ElementsIFCCreator/test/ElementsIFCCreator.Tests"
-    dotnet test
-```
-
 Deploy application
 ```
     cd "ElementsIFCCreator/src/ElementsIFCCreator"

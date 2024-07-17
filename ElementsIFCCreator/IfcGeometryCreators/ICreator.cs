@@ -19,6 +19,5 @@
         /// </summary>
         Action<string> LogErrorMethod { get; set; }
 
-
     }
 }
