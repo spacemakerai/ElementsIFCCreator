@@ -26,12 +26,11 @@ public class Functions
     /// <param name="context">Information about the invocation, function, and execution environment</param>
     /// <param name="request">The incoming request</param>
     /// <returns>The response indicating success of failure with the appropriate HTTP status code<see cref="APIGatewayProxyResponse"/>APIGatewayProxyResponse with the status code and if successful, the url of the S3 location for the IFC file</returns>
-    public async Task<APIGatewayProxyResponse> GetIFCS3Url(APIGatewayProxyRequest request, ILambdaContext context)
+    public APIGatewayProxyResponse GetIFCS3Url(APIGatewayProxyRequest request, ILambdaContext context)
     {
-        IRestClient restClient = new RestClientImpl(new AccessTokenLambda());
         context.Logger.LogInformation("Getting the proposal tree");
         var projectId = request.PathParameters["projectId"];
-        var proposalUrn = request.PathParameters["proposalId"];
+        var proposalUrn = request.PathParameters["proposalUrn"];
         string dataRegion = request.QueryStringParameters["dataRegion"]; // Place holder
 
         if (string.IsNullOrWhiteSpace(projectId) || string.IsNullOrWhiteSpace(proposalUrn))
@@ -46,18 +45,19 @@ public class Functions
 
 
         // Get proposal tree
-        CommonClient.ClientOptions clientOptions = new CommonClient.ClientOptions(jsonConverter: new JsonConverter(),
-            mock: null,
+        CommonClient.ClientOptions clientOptions = new CommonClient.ClientOptions(
+            jsonConverter: new NewtonsoftJsonImpl.JsonNetConverter(),
+            mock: new MockSupportChild(new Dictionary<string, string>()),
             reporter: new ErrorReporter(LogErrorMethod: context.Logger.LogError, LogMethod: context.Logger.LogInformation),
-            client: null,
+            client: new RestClientImpl(new AccessTokenLambda()),
             dataRegion: dataRegion);
 
         ProposalTreeRetriever proposalTreeRetriever = new ProposalTreeRetriever(options: clientOptions,
-            progress: null,
+            progress: new ProgressIndicator(),
             allowConcurrency: true,
             disableBatchElementFetch: false);
 
-        var proposalTree = proposalTreeRetriever.GetProposalTree(projectId, proposalUrn, true);
+        ProposalTree proposalTree = proposalTreeRetriever.GetProposalTree(projectId, proposalUrn, true);
 
         if (proposalTree == null)
         {
@@ -83,7 +83,52 @@ public class Functions
     {
         public string GetAccessToken(TokenAccessType accessType)
         {
-            return "Bearer " + "eyJhbGciOiJSUzI1NiIsImtpZCI6ImI4YjJkMzNhLTFlOTYtNDYwNS1iMWE4LTgwYjRhNWE4YjNlNyIsInBpLmF0bSI6ImFzc2MifQ.eyJjbGFpbXMiOnsic3BhY2VtYWtlcl9saWNlbnNlX3R5cGUiOiJob2JieWlzdCJ9LCJjbGllbnRfaWQiOiJLanNsWTZ2R3duY0Y5QUtWR3BvdmMzRE12ZEQzSnVzVyIsInVzZXJpZCI6IlVIOUpLSEJHTTJMUFNFNVgiLCJzY29wZSI6WyJvcGVuaWQiLCJ1c2VyLXByb2ZpbGU6cmVhZCIsImRhdGE6cmVhZCIsImRhdGE6Y3JlYXRlIiwiZGF0YTp3cml0ZSIsImFjY291bnQ6cmVhZCJdLCJpc3MiOiJodHRwczovL2RldmVsb3Blci5hcGkuYXV0b2Rlc2suY29tIiwiYXVkIjpbImh0dHBzOi8vYXV0b2Rlc2suY29tIl0sImV4cCI6MTcyMTE2NTE4MSwianRpIjoiMjJjODg5YWItNGMwNS00NTg1LTk4MTEtY2U2NWI3ZGJiMTdjIn0.bH25lgfjWaZehtHvTYv-XZ-fTERQaDXjNKIyOH_ESO-TyhHpgnwtEMX6jzMm9h5gHlirO1Z7QRHtwK60QRbQ3x02k22U2NLtIyAdVjZdVQ5eYRsAnbMmoU5gNuoSLKLNVvurU3CAlgWhxNUfhwIKpdaBIAvzV1Ris8bnnOxQ3AKORtp0B6PfVLm7fsdTTobsZsw5RuxpApf_PgyTeFrOY0ykaoyZBj6UXMbAOO6pcbK_P2SwdK1Zaqd_mdGdmXBBj11tLMZkr3tE1_-T8Unz3vHl2UctxFc0jhWGqO6SXX-d-YOHkoXnZwxNz-P0sHV2nk9z8xV4ngTQTEUzyG5tHA";
+            return "eyJhbGciOiJSUzI1NiIsImtpZCI6ImI4YjJkMzNhLTFlOTYtNDYwNS1iMWE4LTgwYjRhNWE4YjNlNyIsInBpLmF0bSI6ImFzc2MifQ.eyJjbGFpbXMiOnsic3BhY2VtYWtlcl9saWNlbnNlX3R5cGUiOiJob2JieWlzdCJ9LCJjbGllbnRfaWQiOiJLanNsWTZ2R3duY0Y5QUtWR3BvdmMzRE12ZEQzSnVzVyIsInVzZXJpZCI6IlVIOUpLSEJHTTJMUFNFNVgiLCJzY29wZSI6WyJvcGVuaWQiLCJ1c2VyLXByb2ZpbGU6cmVhZCIsImRhdGE6cmVhZCIsImRhdGE6Y3JlYXRlIiwiZGF0YTp3cml0ZSIsImFjY291bnQ6cmVhZCJdLCJpc3MiOiJodHRwczovL2RldmVsb3Blci5hcGkuYXV0b2Rlc2suY29tIiwiYXVkIjpbImh0dHBzOi8vYXV0b2Rlc2suY29tIl0sImV4cCI6MTcyMTkzNjE2OCwianRpIjoiNzFmZWY1MGUtN2VlYy00Yzc2LTg2MTUtMDA1NjZhYjM0MWYxIn0.UK2Ck1RrCTuQytMCN34UcdWlGjJWHNZu8Xob2h9nqX-no68zA7p-IOO8skaUhEzg5NSAsxpmw9XAXK6QYLTO4ASYQj3G4i-gQAWq55ukCT_-ucnukWoJ9-7MWg9w6P95qtuFtVs8bc8umk-jcyP2qKpy4j5ClxzLlJKn2of14o5rCZD83b_hkK66Fg4PBNdmEB7ErpM6TPmDM1Oo9v7skr6_SyIcopoaHwy-BcVqR5j1VEZhoypNzwYLfexBVC8gZ23btNqTjoeTZAWAR5Pe1r1uumAdsy7SjhaOuxvg2flLalf3TU5Sv4Mn8xkgLroQgp8_3-VRD_cR_0Kc-vKoyg";
+        }
+    }
+
+    public class MockSupportChild : MockSupport
+    {
+        public MockSupportChild(Dictionary<string, string> mockData) : base(mockData)
+        {
+        }
+
+        public override string GetMockFileFolder()
+        {
+            return null;
+        }
+
+        public override string GetMockName()
+        {
+            return "fileName";
+        }
+
+        public override bool IsPlayingRecordedMock()
+        {
+            return false;
+        }
+
+        public override bool IsRecordingMock()
+        {
+            return false;
+        }
+    }
+
+    public class ProgressIndicator : IProgressIndicator
+    {
+        public void Increment(int amount = 1)
+        {
+            return;
+        }
+
+        public void IncrementNumSteps()
+        {
+            return;
+        }
+
+        public void ReportProgress(string message)
+        {
+            return;
         }
     }
 }
