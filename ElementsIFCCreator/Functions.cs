@@ -1,5 +1,6 @@
 using Amazon.Lambda.APIGatewayEvents;
 using Amazon.Lambda.Core;
+using ElementsIFCCreator.IfcGeometryCreators;
 using FormaAPI;
 using FormaRestClientImpl;
 using System.Net;
@@ -52,22 +53,33 @@ public class Functions
             client: new RestClientImpl(new AccessTokenLambda()),
             dataRegion: dataRegion);
 
+
+
         ProposalTreeRetriever proposalTreeRetriever = new ProposalTreeRetriever(options: clientOptions,
             progress: new ProgressIndicator(),
             allowConcurrency: true,
             disableBatchElementFetch: false);
 
-        ProposalTree proposalTree = proposalTreeRetriever.GetProposalTree(projectId, proposalUrn, true);
+        // Get the proposal Tree
+        ProposalTree proposalTree = null;
+        try
+        {
+            proposalTree = proposalTreeRetriever.GetProposalTree(projectId, proposalUrn, true);
 
-        if (proposalTree == null)
+        }
+        catch (Exception e)
         {
             return new APIGatewayProxyResponse
             {
-                StatusCode = (int)HttpStatusCode.NotFound,
-                Body = "Proposal tree not found",
+                StatusCode = (int)HttpStatusCode.BadRequest,
+                Body = e.Message,
                 Headers = new Dictionary<string, string> { { "Content-Type", "text/plain" } }
             };
         }
+        LevelOfDetailClient lodClient = new LevelOfDetailClient(clientOptions);
+
+        IFCCreator ifCreator = new IFCCreator(proposalTree, context.Logger.LogInformation, context.Logger.LogError, lodClient);
+        ifCreator.Create();
 
         var response = new APIGatewayProxyResponse
         {
@@ -83,7 +95,7 @@ public class Functions
     {
         public string GetAccessToken(TokenAccessType accessType)
         {
-            return "eyJhbGciOiJSUzI1NiIsImtpZCI6ImI4YjJkMzNhLTFlOTYtNDYwNS1iMWE4LTgwYjRhNWE4YjNlNyIsInBpLmF0bSI6ImFzc2MifQ.eyJjbGFpbXMiOnsic3BhY2VtYWtlcl9saWNlbnNlX3R5cGUiOiJob2JieWlzdCJ9LCJjbGllbnRfaWQiOiJLanNsWTZ2R3duY0Y5QUtWR3BvdmMzRE12ZEQzSnVzVyIsInVzZXJpZCI6IlVIOUpLSEJHTTJMUFNFNVgiLCJzY29wZSI6WyJvcGVuaWQiLCJ1c2VyLXByb2ZpbGU6cmVhZCIsImRhdGE6cmVhZCIsImRhdGE6Y3JlYXRlIiwiZGF0YTp3cml0ZSIsImFjY291bnQ6cmVhZCJdLCJpc3MiOiJodHRwczovL2RldmVsb3Blci5hcGkuYXV0b2Rlc2suY29tIiwiYXVkIjpbImh0dHBzOi8vYXV0b2Rlc2suY29tIl0sImV4cCI6MTcyMTkzNjE2OCwianRpIjoiNzFmZWY1MGUtN2VlYy00Yzc2LTg2MTUtMDA1NjZhYjM0MWYxIn0.UK2Ck1RrCTuQytMCN34UcdWlGjJWHNZu8Xob2h9nqX-no68zA7p-IOO8skaUhEzg5NSAsxpmw9XAXK6QYLTO4ASYQj3G4i-gQAWq55ukCT_-ucnukWoJ9-7MWg9w6P95qtuFtVs8bc8umk-jcyP2qKpy4j5ClxzLlJKn2of14o5rCZD83b_hkK66Fg4PBNdmEB7ErpM6TPmDM1Oo9v7skr6_SyIcopoaHwy-BcVqR5j1VEZhoypNzwYLfexBVC8gZ23btNqTjoeTZAWAR5Pe1r1uumAdsy7SjhaOuxvg2flLalf3TU5Sv4Mn8xkgLroQgp8_3-VRD_cR_0Kc-vKoyg";
+            return "eyJhbGciOiJSUzI1NiIsImtpZCI6ImI4YjJkMzNhLTFlOTYtNDYwNS1iMWE4LTgwYjRhNWE4YjNlNyIsInBpLmF0bSI6ImFzc2MifQ.eyJjbGFpbXMiOnsic3BhY2VtYWtlcl9saWNlbnNlX3R5cGUiOiJob2JieWlzdCJ9LCJjbGllbnRfaWQiOiJLanNsWTZ2R3duY0Y5QUtWR3BvdmMzRE12ZEQzSnVzVyIsInVzZXJpZCI6IlVIOUpLSEJHTTJMUFNFNVgiLCJzY29wZSI6WyJvcGVuaWQiLCJ1c2VyLXByb2ZpbGU6cmVhZCIsImRhdGE6cmVhZCIsImRhdGE6Y3JlYXRlIiwiZGF0YTp3cml0ZSIsImFjY291bnQ6cmVhZCJdLCJpc3MiOiJodHRwczovL2RldmVsb3Blci5hcGkuYXV0b2Rlc2suY29tIiwiYXVkIjpbImh0dHBzOi8vYXV0b2Rlc2suY29tIl0sImV4cCI6MTcyMjg4MDEzNiwianRpIjoiZDMzODcxZjktYzk5Ny00NDAyLWI5OGYtNDRlNTQyMjk2YmVmIn0.VeYwHcPDuC2MxPSP686gbcGCPiqY-tdi8MvRbLwMCRQDUAJYENvLn_jjoVF4-guxLDwUU1sK27wiyKC1Uz32Q_fq4U7XkSec_eExHaZjmlwAGQcdrh81KKslfgwxPuYF5mH-D62btydgmRVXha_MfbzljJgndd0Ro0geNRbIU7ZLkYoLLQ2OZCdugiCrcznKu-pxf0QYnlVdeTQgOHOHufJ55MCKOVALe-6wVLi48Zyjyto1jIA0c3VozGmmNwEqGRAYORebeuMdmsZxrXsbuA3mMa_ut0RhNLz68V-Cd1jP_C2vRKxL0wyROXJ-z1nF-sgchrWyDHd_DJcPl32rWg";
         }
     }
 
