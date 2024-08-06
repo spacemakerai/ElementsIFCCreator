@@ -99,10 +99,13 @@ namespace ElementsIFCCreator.IfcGeometryCreators
                     detailedBuildingElementIFCCreator.Create();
                     break;
                 case SmRoadElement:
+                    var roadElement = element as SmRoadElement;
+                    RoadElementIFCCreator roadElementIFCCreator = new RoadElementIFCCreator(roadElement);
+                    roadElementIFCCreator.Create();
                     break;
-                case SmPropertyBoundaryElement:
+                case SmPropertyBoundaryElement: // Do we even need this?
                     break;
-                case SmGroupElement:
+                case SmGroupElement: // Base is the group. Run the debugger and take a look at this.
                     if (element.Children != null && element.Children.Any())
                     {
                         foreach (var child in element.Children)
@@ -112,7 +115,7 @@ namespace ElementsIFCCreator.IfcGeometryCreators
                         }
                     }
                     break;
-                case SmAXMElement:
+                case SmAXMElement: // What is SmAXElement? Just treat it as a volume mesh. or possibly brep.
                     element.GeoJsonFeatures = ProposalTree.GetGeoJsonFeatures(element.Volume25DCollectionRep ?? element.VolumeMeshRep);
                     break;
                 case SmTerrainElement:

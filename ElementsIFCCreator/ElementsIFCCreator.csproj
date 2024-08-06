@@ -34,24 +34,4 @@
 	  <PackageReference Include="SharpGLTF.Core" Version="1.0.0-alpha0031" />
   </ItemGroup>
 
-
-	<!--<ItemGroup>
-		<ContentWithTargetPath Include="$(SolutionDir)GLTFInterface/SharpGLTFWrapper/bin/$(ConfigurationName)/$(TargetFramework)/SharpGLTFWrapper.dll">
-			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
-			<TargetPath>SharpGLTFWrapper/SharpGLTFWrapper.dll</TargetPath>
-		</ContentWithTargetPath>
-		<ContentWithTargetPath Include="$(SolutionDir)GLTFInterface/SharpGLTFWrapper/bin/$(ConfigurationName)/$(TargetFramework)/SharpGLTF.Core.dll">
-			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
-			<TargetPath>SharpGLTFWrapper/SharpGLTF.Core.dll</TargetPath>
-		</ContentWithTargetPath>
-		<ContentWithTargetPath Include="$(SolutionDir)GLTFInterface/SharpGLTFWrapper/bin/$(ConfigurationName)/$(TargetFramework)/System.Text.Json.dll">
-			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
-			<TargetPath>SharpGLTFWrapper/System.Text.Json.dll</TargetPath>
-		</ContentWithTargetPath>
-	</ItemGroup>-->
-
-<!--<ItemGroup>
-	<None Update="aws-lambda-tools-defaults.json" CopyToOutputDirectory="PreserveNewest" />
-	<None Update="App.config" CopyToOutputDirectory="PreserveNewest" />
-</ItemGroup>-->
 </Project>

@@ -25,6 +25,7 @@ namespace ElementsIFCCreator.IfcGeometryCreators
         {
             try
             {
+                LogMethod("Creating geometry for the detailed building element: " + this.DetailedBuildingElement.Urn);
                 // Create a building
                 IfcBuilding building = new IfcBuilding(ParentSite, "Building");
 
@@ -42,9 +43,6 @@ namespace ElementsIFCCreator.IfcGeometryCreators
                     LogMethod("Building details are not null");
                     CreateDetailedBuildings(buildingDetails, building);
                 }
-
-
-
                 return true;
             }
             catch (Exception e)
@@ -56,6 +54,60 @@ namespace ElementsIFCCreator.IfcGeometryCreators
 
         internal void CreateDetailedBuildings(BuildingDetails buildingDetails, IfcBuilding building)
         {
+            LogMethod($"Creating detailed building for {this.DetailedBuildingElement.Urn}");
+
+            var geometry = buildingDetails.Geometry;
+            if (geometry == null)
+            {
+                LogErrorMethod("Geometry is null for the building details. Cannot create geometry");
+                return;
+            }
+            IfcBuildingStorey lastStorey = null;
+
+            for (int i = 0; i < geometry.Levels.Count; i++)
+            {
+                LogMethod("Creating level (0 indexed) " + i);
+                var level = geometry.Levels[i];
+                if (level.FloorLoops != null && level.FloorLoops.Any())
+                {
+                    IfcBuildingStorey storey = new IfcBuildingStorey(host: building, name: $"Level {i}", elevation: level.Elevation);
+                    double height = geometry.Levels[i + 1].Elevation - level.Elevation;
+                    storey.Representation = new IfcProductDefinitionShape(
+                    rep: new IfcShapeRepresentation(
+                        extrudedAreaSolid: new IfcExtrudedAreaSolid(
+                                                prof: new IfcArbitraryClosedProfileDef(name: "Floor loop",
+                                                    boundedCurve: new IfcPolyline(pts: level.FloorLoops[0].GroundMultiLoopPolygon.First().Select(p => new IfcCartesianPoint(DbModel, p.X, p.Y, p.Z)))
+                                                ),
+                                                dir: new IfcDirection(DbModel, 0, 0, 1),
+                                                depth: height
+                                            )
+                        )
+                    );
+                    lastStorey = storey;
+                }
+                else if (level.RoofLoops != null && level.RoofLoops.Any())
+                {
+                    LogMethod("Creating roof for this building");
+                    var placement = new IfcLocalPlacement(
+                        relativeTo: lastStorey.ObjectPlacement,
+                        placement: new IfcAxis2Placement3D(
+                            location: new IfcCartesianPoint(DbModel, 0, 0, level.Elevation)
+                        )
+                    );
+                    IfcPolyline boundedCurve = new IfcPolyline(level.RoofLoops[0].GroundMultiLoopPolygon.First().Select(p => new IfcCartesianPoint(DbModel, p.X, p.Y, p.Z)));
+                    IfcPlane plane = new IfcPlane(new IfcAxis2Placement3D(new IfcCartesianPoint(DbModel, 0, 0, level.Elevation)));
+                    IfcCurveBoundedPlane boundedRoofShape = new IfcCurveBoundedPlane(plane, boundedCurve);
+                    IfcRoof roof = new IfcRoof(host: building,
+                                               placement: new IfcLocalPlacement(
+                                                   relativeTo: lastStorey.ObjectPlacement,
+                                                   placement: new IfcAxis2Placement3D(location: new IfcCartesianPoint(DbModel, 0, 0, level.Elevation - lastStorey.Elevation))
+                                                  ),
+                                               new IfcProductDefinitionShape(new IfcShapeRepresentation(boundedRoofShape)));
+
+                    LogMethod("Roof created");
+
+                }
+            }
 
         }
 
@@ -84,7 +136,6 @@ namespace ElementsIFCCreator.IfcGeometryCreators
 
         internal void Create25DRepresentation(IfcBuilding building)
         {
-            LogMethod("");
             LogMethod($"Retrieved Volume25D representation for {this.DetailedBuildingElement.Urn}");
             var extrudableFeatures = this.DetailedBuildingElement.GeoJsonFeatures.Where(feature =>
                    feature.Geometry?.Coordinates?.Any() == true &&
@@ -100,8 +151,8 @@ namespace ElementsIFCCreator.IfcGeometryCreators
                 building.Representation = new IfcProductDefinitionShape(
                     rep: new IfcShapeRepresentation(
                         extrudedAreaSolid: new IfcExtrudedAreaSolid(
-                                                prof: new IfcArbitraryClosedProfileDef("curve",
-                                                    new IfcPolyline(pts: polygon.Select(p => new IfcCartesianPoint(DbModel, p.X, p.Y, p.Z)))
+                                                prof: new IfcArbitraryClosedProfileDef(name: "curve",
+                                                    boundedCurve: new IfcPolyline(pts: polygon.Select(p => new IfcCartesianPoint(DbModel, p.X, p.Y, p.Z)))
                                                 ),
                                                 dir: new IfcDirection(DbModel, 0, 0, 1),
                                                 depth: height
@@ -162,8 +213,8 @@ namespace ElementsIFCCreator.IfcGeometryCreators
             }
 
 
-            IfcCartesianPointList3D pointList = new IfcCartesianPointList3D(DbModel, convertedCordinates);
-            IfcTriangulatedFaceSet ifcTriangulatedFaceSet = new IfcTriangulatedFaceSet(pointList, indicesList);
+            IfcCartesianPointList3D pointList = new IfcCartesianPointList3D(db: DbModel, coordList: convertedCordinates);
+            IfcTriangulatedFaceSet ifcTriangulatedFaceSet = new IfcTriangulatedFaceSet(pointList: pointList, coords: indicesList);
             building.Representation = new IfcProductDefinitionShape(new IfcShapeRepresentation(ifcTriangulatedFaceSet));
             LogMethod($"Volume mesh representation created for urn: {this.DetailedBuildingElement.Urn}");
         }
